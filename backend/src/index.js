@@ -1,13 +1,16 @@
+import 'dotenv/config';
 import express from "express";
 import morgan from "morgan";
-import dotenv from "dotenv";
+import cors from "cors";
 import paymentsRouter from "./routes/payments.js";
 import merchantsRouter from "./routes/merchants.js";
 
-dotenv.config();
-
 const app = express();
 const port = process.env.PORT || 4000;
+
+app.use(cors({
+  origin: "http://localhost:3000"
+}));
 
 app.use(express.json({ limit: "1mb" }));
 app.use(morgan("dev"));

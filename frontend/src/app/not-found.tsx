@@ -27,7 +27,7 @@ export default function NotFound() {
 
         <div className="flex flex-col gap-3">
           <p className="font-mono text-xs uppercase tracking-[0.3em] text-mint">Error 404</p>
-          <h1 className="text-3xl font-bold text-white sm:text-4xl">Wait, this coordinate doesn't exist.</h1>
+          <h1 className="text-3xl font-bold text-white sm:text-4xl">Wait, this coordinate doesn&apos;t exist.</h1>
           <p className="text-slate-400">
             The profile or payment link you are looking for has drifted out of range. Check the URL or return to safety.
           </p>

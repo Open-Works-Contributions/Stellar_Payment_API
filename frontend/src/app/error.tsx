@@ -41,7 +41,7 @@ export default function Error({
           <p className="font-mono text-xs uppercase tracking-[0.3em] text-red-400">Error 500</p>
           <h1 className="text-3xl font-bold text-white sm:text-4xl">Our network encountered a solar flare.</h1>
           <p className="text-slate-400">
-            Internal systems are glitching. We've logged the anomaly and are deploying a repair shuttle.
+            Internal systems are glitching. We&apos;ve logged the anomaly and are deploying a repair shuttle.
           </p>
         </div>
 

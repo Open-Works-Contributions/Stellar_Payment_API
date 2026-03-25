@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { registerMerchant } from "../lib/auth";
+import { registerMerchant, type Merchant } from "../lib/auth";
+import CopyButton from "./CopyButton";
 
 export default function RegistrationForm() {
   const [email, setEmail] = useState("");
@@ -9,8 +10,7 @@ export default function RegistrationForm() {
   const [notificationEmail, setNotificationEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [registeredMerchant, setRegisteredMerchant] = useState<any | null>(null);
-  const [copied, setCopied] = useState(false);
+  const [registeredMerchant, setRegisteredMerchant] = useState<Merchant | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,18 +20,10 @@ export default function RegistrationForm() {
     try {
       const data = await registerMerchant(email, businessName, notificationEmail);
       setRegisteredMerchant(data.merchant);
-    } catch (err: any) {
-      setError(err.message || "Failed to register merchant");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to register merchant");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const copyApiKey = () => {
-    if (registeredMerchant?.api_key) {
-      navigator.clipboard.writeText(registeredMerchant.api_key);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
     }
   };
 
@@ -43,7 +35,7 @@ export default function RegistrationForm() {
             <p className="font-mono text-xs uppercase tracking-[0.2em] text-mint">Registration Success</p>
             <h2 className="text-xl font-semibold text-white">Welcome, {registeredMerchant.business_name}!</h2>
             <p className="text-sm text-slate-400">
-              Your merchant account is ready. Save your API key below—you won't be able to see it again.
+              Your merchant account is ready. Save your API key below—you won&apos;t be able to see it again.
             </p>
           </div>
 
@@ -53,16 +45,7 @@ export default function RegistrationForm() {
               <code className="flex-1 truncate font-mono text-sm text-mint">
                 {registeredMerchant.api_key}
               </code>
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(registeredMerchant.api_key);
-                  setCopied(true);
-                  setTimeout(() => setCopied(false), 2000);
-                }}
-                className="flex h-10 items-center justify-center rounded-lg bg-mint px-4 text-xs font-bold text-black transition-all hover:bg-glow"
-              >
-                {copied ? "COPIED" : "COPY"}
-              </button>
+              <CopyButton text={registeredMerchant.api_key} />
             </div>
           </div>
 
@@ -72,14 +55,7 @@ export default function RegistrationForm() {
               <code className="flex-1 truncate font-mono text-sm text-mint">
                 {registeredMerchant.webhook_secret}
               </code>
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(registeredMerchant.webhook_secret);
-                }}
-                className="flex h-10 items-center justify-center rounded-lg border border-white/10 px-4 text-xs font-bold text-white transition-all hover:bg-white/10"
-              >
-                COPY
-              </button>
+              <CopyButton text={registeredMerchant.webhook_secret} />
             </div>
           </div>
         </div>

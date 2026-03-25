@@ -23,7 +23,7 @@ export async function isFreighterAvailable(): Promise<boolean> {
 export async function getFreighterPublicKey(): Promise<string> {
   try {
     return await freighter.getPublicKey();
-  } catch (error) {
+  } catch {
     throw new Error("Failed to get public key from Freighter wallet");
   }
 }
@@ -46,7 +46,7 @@ export async function signWithFreighter(
       signedXDR,
       publicKey,
     };
-  } catch (error) {
+  } catch {
     throw new Error("Failed to sign transaction with Freighter wallet");
   }
 }

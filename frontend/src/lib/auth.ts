@@ -6,6 +6,16 @@ export interface MerchantSession {
   exp: number;
 }
 
+export interface Merchant {
+  id: string;
+  email: string;
+  business_name: string;
+  notification_email: string;
+  api_key: string;
+  webhook_secret: string;
+  created_at: string;
+}
+
 /**
  * Decode the JWT payload without verifying the signature.
  * Verification happens server-side; here we only need the claims for UI state.
@@ -95,7 +105,7 @@ export async function registerMerchant(
   email: string,
   business_name: string,
   notification_email: string
-): Promise<{ message: string; merchant: any }> {
+): Promise<{ message: string; merchant: Merchant }> {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
   const res = await fetch(`${apiUrl}/api/merchants/register`, {

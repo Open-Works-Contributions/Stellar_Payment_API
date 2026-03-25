@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import * as StellarSdk from "stellar-sdk";
 
 const NETWORK = (process.env.STELLAR_NETWORK || "testnet").toLowerCase();

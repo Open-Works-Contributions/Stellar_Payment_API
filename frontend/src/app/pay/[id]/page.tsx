@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { isFreighterAvailable } from "@/lib/freighter";
 import { usePayment } from "@/lib/usePayment";
+import CopyButton from "@/components/CopyButton";
 
 interface PaymentDetails {
   id: string;
@@ -31,22 +32,22 @@ export default function PaymentPage() {
   // Fetch payment details
   useEffect(() => {
     const controller = new AbortController();
-    
+
     const fetchPayment = async () => {
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
         const response = await fetch(`${apiUrl}/api/payment-status/${paymentId}`, {
           signal: controller.signal
         });
-        
+
         if (!response.ok) {
           throw new Error("Payment not found");
         }
-        
+
         const data = await response.json();
         setPayment(data.payment); // Fixing data structure - backend returns { payment: data }
-      } catch (err: any) {
-        if (err.name === "AbortError") return;
+      } catch (err: unknown) {
+        if (err instanceof Error && err.name === "AbortError") return;
         setError(err instanceof Error ? err.message : "Failed to fetch payment details");
       } finally {
         setLoading(false);
@@ -101,7 +102,7 @@ export default function PaymentPage() {
           // Silent error - the payment is still valid on-chain
         }
       }, 2000);
-    } catch (err) {
+    } catch {
       setError(paymentError || "Failed to process payment");
     }
   };
@@ -160,7 +161,10 @@ export default function PaymentPage() {
           {/* Recipient */}
           <div className="space-y-2">
             <p className="text-sm text-slate-400">Recipient Address</p>
-            <p className="font-mono text-sm text-white break-all">{payment.recipient}</p>
+            <div className="flex items-center gap-2">
+              <p className="font-mono text-sm text-white break-all">{payment.recipient}</p>
+              <CopyButton text={payment.recipient} />
+            </div>
           </div>
 
           {/* Description */}
@@ -174,11 +178,10 @@ export default function PaymentPage() {
           {/* Status */}
           <div className="flex items-center gap-2">
             <p className="text-sm text-slate-400">Status:</p>
-            <span className={`rounded-full px-3 py-1 text-xs font-medium ${
-              isCompleted
+            <span className={`rounded-full px-3 py-1 text-xs font-medium ${isCompleted
                 ? "bg-green-500/20 text-green-400"
                 : "bg-yellow-500/20 text-yellow-400"
-            }`}>
+              }`}>
               {isCompleted ? "Completed" : "Pending"}
             </span>
           </div>
@@ -187,14 +190,17 @@ export default function PaymentPage() {
           {payment.tx_id && (
             <div className="space-y-2">
               <p className="text-sm text-slate-400">Transaction Hash</p>
-              <a
-                href={`${process.env.NEXT_PUBLIC_HORIZON_URL || "https://horizon-testnet.stellar.org"}/transactions/${payment.tx_id}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-mono text-sm text-blue-400 hover:text-blue-300 break-all"
-              >
-                {payment.tx_id}
-              </a>
+              <div className="flex items-center gap-2">
+                <a
+                  href={`${process.env.NEXT_PUBLIC_HORIZON_URL || "https://horizon-testnet.stellar.org"}/transactions/${payment.tx_id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-mono text-sm text-blue-400 hover:text-blue-300 break-all"
+                >
+                  {payment.tx_id}
+                </a>
+                <CopyButton text={payment.tx_id} />
+              </div>
             </div>
           )}
 

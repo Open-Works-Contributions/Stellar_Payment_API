@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { createHmac } from "crypto";
 
 const RETRY_DELAYS_MS = [10_000, 30_000, 60_000]; // 10s, 30s, 60s
