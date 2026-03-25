@@ -18,6 +18,38 @@ interface PaymentDetails {
   created_at: string;
 }
 
+function AssetIcon({ asset }: { asset: string }) {
+  const normalizedAsset = asset.toUpperCase();
+
+  if (normalizedAsset === "XLM" || normalizedAsset === "NATIVE") {
+    return (
+      <span
+        aria-hidden="true"
+        className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-white/15 via-mint/20 to-mint/40 text-mint shadow-[0_0_0_1px_rgba(255,255,255,0.08)]"
+      >
+        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.8}>
+          <path d="M14.5 3.5 9 9l4.5.5L13 14l5.5-5.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M6 18c3.5-1 6-3.5 7-7" strokeLinecap="round" />
+          <path d="M7.5 16.5 4.5 19.5" strokeLinecap="round" />
+        </svg>
+      </span>
+    );
+  }
+
+  if (normalizedAsset === "USDC") {
+    return (
+      <span
+        aria-hidden="true"
+        className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#2775CA] text-[10px] font-bold tracking-[0.18em] text-white shadow-[0_0_0_1px_rgba(255,255,255,0.08)]"
+      >
+        USDC
+      </span>
+    );
+  }
+
+  return null;
+}
+
 export default function PaymentPage() {
   const params = useParams();
   const paymentId = params.id as string;
@@ -164,8 +196,11 @@ export default function PaymentPage() {
           {/* Amount */}
           <div className="flex items-baseline justify-between border-b border-white/10 pb-4">
             <span className="text-slate-300">Amount</span>
-            <span className="text-3xl font-semibold text-white">
-              {payment.amount} {payment.asset}
+            <span className="flex items-center gap-2 text-3xl font-semibold text-white">
+              <AssetIcon asset={payment.asset} />
+              <span>
+                {payment.amount} {payment.asset}
+              </span>
             </span>
           </div>
 
