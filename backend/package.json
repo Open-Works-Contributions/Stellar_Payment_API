@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
-    "test": "vitest run"
+    "test": "vitest run",
+    "purge:webhook-logs": "node scripts/purge-webhook-logs.js"
   },
   "devDependencies": {
     "nodemon": "^3.1.14",

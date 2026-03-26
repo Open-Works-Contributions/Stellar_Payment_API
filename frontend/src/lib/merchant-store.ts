@@ -20,6 +20,11 @@ export interface MerchantMetadata {
   notification_email: string;
   api_key: string;
   webhook_secret: string;
+  branding_config?: {
+    primary_color?: string;
+    secondary_color?: string;
+    background_color?: string;
+  } | null;
   created_at: string;
 }
 

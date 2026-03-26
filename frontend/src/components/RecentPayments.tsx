@@ -99,6 +99,53 @@ export default function RecentPayments() {
     setSelectedPayment(null);
   };
 
+  const allPaymentIds = payments.map((payment) => payment.id);
+  const selectedCount = selectedIds.size;
+  const allSelected = allPaymentIds.length > 0 && selectedCount === allPaymentIds.length;
+  const someSelected = selectedCount > 0 && !allSelected;
+
+  useEffect(() => {
+    if (selectAllRef.current) {
+      selectAllRef.current.indeterminate = someSelected;
+    }
+  }, [someSelected]);
+
+  const toggleBulkMode = () => {
+    setBulkMode((prev) => {
+      const next = !prev;
+      if (!next) {
+        setSelectedIds(new Set());
+      }
+      return next;
+    });
+  };
+
+  const toggleSelection = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      setSelectedIds(new Set());
+      return;
+    }
+    setSelectedIds(new Set(allPaymentIds));
+  };
+
+  const cancelSelected = () => {
+    if (selectedCount === 0) return;
+    setPayments((prev) => prev.filter((payment) => !selectedIds.has(payment.id)));
+    setSelectedIds(new Set());
+  };
+
   if (loading) {
     return (
       <div className="animate-pulse space-y-3">

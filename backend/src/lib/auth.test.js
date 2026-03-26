@@ -80,7 +80,9 @@ describe("createApiKeyAuth", () => {
     await middleware(req, res, next);
 
     expect(from).toHaveBeenCalledWith("merchants");
-    expect(select).toHaveBeenCalledWith("id, email, business_name, notification_email");
+    expect(select).toHaveBeenCalledWith(
+      "id, email, business_name, notification_email, branding_config",
+    );
     expect(eq).toHaveBeenCalledWith("api_key", "invalid-key");
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith({ error: "Invalid API key" });
