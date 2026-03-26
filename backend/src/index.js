@@ -7,6 +7,7 @@ import swaggerUi from "swagger-ui-express";
 import { requireApiKeyAuth } from "./lib/auth.js";
 import { closePool, pool } from "./lib/db.js";
 import { validateEnvironmentVariables } from "./lib/env-validation.js";
+import { idempotencyMiddleware } from "./lib/idempotency.js";
 import { supabase } from "./lib/supabase.js";
 import merchantsRouter from "./routes/merchants.js";
 import paymentsRouter from "./routes/payments.js";
@@ -76,6 +77,7 @@ app.get("/health", async (req, res) => {
 });
 
 app.use("/api/create-payment", requireApiKeyAuth());
+app.use("/api/create-payment", idempotencyMiddleware);
 app.use("/api/payments", requireApiKeyAuth());
 app.use("/api/rotate-key", requireApiKeyAuth());
 app.use("/api", paymentsRouter);

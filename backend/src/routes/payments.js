@@ -59,6 +59,12 @@ function validateCreatePayment(body) {
  *   post:
  *     summary: Create a new payment request
  *     tags: [Payments]
+ *     parameters:
+ *       - in: header
+ *         name: Idempotency-Key
+ *         schema:
+ *           type: string
+ *         description: Optional unique key for idempotent requests. Use UUID or request ID. Responses are cached for 24 hours.
  *     requestBody:
  *       required: true
  *       content:
@@ -104,8 +110,21 @@ function validateCreatePayment(body) {
  *                   type: string
  *                 status:
  *                   type: string
+ *       200:
+ *         description: Duplicate request — cached response returned from idempotency key
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 payment_id:
+ *                   type: string
+ *                 payment_link:
+ *                   type: string
+ *                 status:
+ *                   type: string
  *       400:
- *         description: Validation error
+ *         description: Validation error or invalid Idempotency-Key
  */
 router.post("/create-payment", async (req, res, next) => {
   try {
@@ -408,6 +427,105 @@ router.get("/payments", async (req, res, next) => {
       total_pages: totalPages,
       page,
       limit
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * @swagger
+ * /api/metrics/7day:
+ *   get:
+ *     summary: Get 7-day rolling payment volume metrics
+ *     tags: [Metrics]
+ *     security:
+ *       - ApiKeyAuth: []
+ *     responses:
+ *       200:
+ *         description: Daily volume data for past 7 days
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       date:
+ *                         type: string
+ *                         description: Date in YYYY-MM-DD format
+ *                       volume:
+ *                         type: number
+ *                         description: Total payment amount for that day
+ *                       count:
+ *                         type: integer
+ *                         description: Number of payments on that day
+ *                 total_volume:
+ *                   type: number
+ *                   description: Total volume across all 7 days
+ *                 total_payments:
+ *                   type: integer
+ *                   description: Total payment count across all 7 days
+ *       401:
+ *         description: Missing or invalid API key
+ */
+router.get("/metrics/7day", async (req, res, next) => {
+  try {
+    // Get payments from last 7 days
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const { data: payments, error } = await supabase
+      .from("payments")
+      .select("amount, created_at, status")
+      .eq("merchant_id", req.merchant.id)
+      .gte("created_at", sevenDaysAgo.toISOString())
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      error.status = 500;
+      throw error;
+    }
+
+    // Group payments by date
+    const metricsMap = new Map();
+    let totalVolume = 0;
+
+    payments.forEach((payment) => {
+      const date = new Date(payment.created_at).toISOString().split("T")[0];
+      const volume = Number(payment.amount) || 0;
+
+      if (!metricsMap.has(date)) {
+        metricsMap.set(date, { date, volume: 0, count: 0 });
+      }
+
+      const dayMetric = metricsMap.get(date);
+      dayMetric.volume += volume;
+      dayMetric.count += 1;
+      totalVolume += volume;
+    });
+
+    // Ensure all 7 days are represented, even if no payments
+    const data = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split("T")[0];
+
+      if (metricsMap.has(dateStr)) {
+        data.push(metricsMap.get(dateStr));
+      } else {
+        data.push({ date: dateStr, volume: 0, count: 0 });
+      }
+    }
+
+    res.json({
+      data,
+      total_volume: Number(totalVolume.toFixed(2)),
+      total_payments: payments.length
     });
   } catch (err) {
     next(err);
