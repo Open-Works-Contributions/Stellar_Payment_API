@@ -560,18 +560,25 @@ function createPaymentsRouter({
 
       const metricsMap = new Map();
       let totalVolume = 0;
+      let confirmedCount = 0;
 
       payments.forEach((payment) => {
         const date = new Date(payment.created_at).toISOString().split("T")[0];
         const volume = Number(payment.amount) || 0;
 
         if (!metricsMap.has(date)) {
-          metricsMap.set(date, { date, volume: 0, count: 0 });
+          metricsMap.set(date, { date, volume: 0, count: 0, confirmed_count: 0 });
         }
 
         const dayMetric = metricsMap.get(date);
         dayMetric.volume += volume;
         dayMetric.count += 1;
+        
+        if (payment.status === "confirmed") {
+          dayMetric.confirmed_count += 1;
+          confirmedCount += 1;
+        }
+        
         totalVolume += volume;
       });
 
@@ -584,14 +591,21 @@ function createPaymentsRouter({
         if (metricsMap.has(dateStr)) {
           data.push(metricsMap.get(dateStr));
         } else {
-          data.push({ date: dateStr, volume: 0, count: 0 });
+          data.push({ date: dateStr, volume: 0, count: 0, confirmed_count: 0 });
         }
       }
+
+      const totalPayments = payments.length;
+      const successRate = totalPayments > 0 
+        ? Number(((confirmedCount / totalPayments) * 100).toFixed(1)) 
+        : 0;
 
       res.json({
         data,
         total_volume: Number(totalVolume.toFixed(2)),
-        total_payments: payments.length,
+        total_payments: totalPayments,
+        confirmed_count: confirmedCount,
+        success_rate: successRate,
       });
     } catch (err) {
       next(err);

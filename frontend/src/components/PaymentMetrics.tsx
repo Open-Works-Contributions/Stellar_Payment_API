@@ -42,6 +42,8 @@ interface MetricsResponse {
   data: MetricData[];
   total_volume: number;
   total_payments: number;
+  confirmed_count: number;
+  success_rate: number;
 }
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -141,7 +143,11 @@ export default function PaymentMetrics() {
   if (loading || !hydrated) {
     return (
       <div className="animate-pulse space-y-4">
-        <div className="h-10 w-48 rounded-lg bg-white/5" />
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div className="h-24 rounded-xl bg-white/5" />
+          <div className="h-24 rounded-xl bg-white/5" />
+          <div className="h-24 rounded-xl bg-white/5" />
+        </div>
         <div className="h-80 w-full rounded-xl bg-white/5" />
       </div>
     );
@@ -174,30 +180,47 @@ export default function PaymentMetrics() {
     <div className="flex flex-col gap-6">
       {/* Summary cards */}
       {summary && (
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-3">
           <div className="rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur">
-            <p className="font-mono text-xs uppercase tracking-wider text-slate-400">
+            <p className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
               7-Day Volume
             </p>
             <div className="mt-2 flex items-baseline gap-2">
-              <p className="text-3xl font-bold text-mint">
+              <p className="text-2xl font-bold text-mint">
                 {summary.total_volume.toLocaleString()}
               </p>
-              <p className="text-sm text-slate-400">XLM</p>
+              <p className="text-xs text-slate-400 font-mono">XLM</p>
             </div>
           </div>
 
           <div className="rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur">
-            <p className="font-mono text-xs uppercase tracking-wider text-slate-400">
-              Total Payments
+            <p className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
+              Confirmed Intents
             </p>
             <div className="mt-2 flex items-baseline gap-2">
-              <p className="text-3xl font-bold text-mint">
-                {summary.total_payments}
+              <p className="text-2xl font-bold text-mint">
+                {summary.confirmed_count}
               </p>
-              <p className="text-sm text-slate-400">
-                {summary.total_payments === 1 ? "payment" : "payments"}
+              <p className="text-xs text-slate-400">
+                {summary.confirmed_count === 1 ? "intent" : "intents"}
               </p>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur">
+            <p className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
+              Success Rate
+            </p>
+            <div className="mt-2 flex items-baseline gap-2">
+              <p className="text-2xl font-bold text-mint">
+                {summary.success_rate}%
+              </p>
+              <div className="flex h-1.5 w-full max-w-[60px] overflow-hidden rounded-full bg-slate-800">
+                <div 
+                  className="bg-mint" 
+                  style={{ width: `${summary.success_rate}%` }} 
+                />
+              </div>
             </div>
           </div>
         </div>
