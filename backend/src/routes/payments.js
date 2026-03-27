@@ -307,7 +307,7 @@ function createPaymentsRouter({
         const { data, error } = await supabase
           .from("payments")
           .select(
-            "id, amount, asset, asset_issuer, recipient, status, tx_id, memo, memo_type, webhook_url, merchants(webhook_secret)",
+            "id, merchant_id, amount, asset, asset_issuer, recipient, status, tx_id, memo, memo_type, webhook_url, merchants(webhook_secret)",
           )
           .eq("id", req.params.id)
           .maybeSingle();
@@ -350,6 +350,20 @@ function createPaymentsRouter({
         if (updateError) {
           updateError.status = 500;
           throw updateError;
+        }
+
+        // Emit real-time event to the merchant's private room (issue #229)
+        const io = req.app.locals.io;
+        if (io && data.merchant_id) {
+          io.to(`merchant:${data.merchant_id}`).emit("payment:confirmed", {
+            id: data.id,
+            amount: data.amount,
+            asset: data.asset,
+            asset_issuer: data.asset_issuer,
+            recipient: data.recipient,
+            tx_id: match.transaction_hash,
+            confirmed_at: new Date().toISOString(),
+          });
         }
 
         const merchantSecret = data.merchants?.webhook_secret;

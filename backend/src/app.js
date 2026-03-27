@@ -1,9 +1,10 @@
 import cors from "cors";
 import express from "express";
-import morgan from "morgan";
+import { Server as SocketIOServer } from "socket.io";
 import swaggerJsdoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
 import { ZodError } from "zod";
+import { httpLogger, logger } from "./lib/logger.js";
 
 import createPaymentsRouter from "./routes/payments.js";
 import merchantsRouter from "./routes/merchants.js";
@@ -24,8 +25,28 @@ import {
 export async function createApp({ redisClient }) {
   const app = express();
 
-  // Make DB pool accessible
+  // Create socket.io instance (attached to HTTP server in server.js)
+  const io = new SocketIOServer({
+    cors: {
+      origin: process.env.CORS_ALLOWED_ORIGINS
+        ? process.env.CORS_ALLOWED_ORIGINS.split(",").map((o) => o.trim())
+        : ["http://localhost:3000"],
+      credentials: true,
+    },
+  });
+
+  // Socket.io room management: clients join their merchant-specific room
+  io.on("connection", (socket) => {
+    socket.on("join:merchant", ({ merchant_id }) => {
+      if (typeof merchant_id === "string" && merchant_id.length > 0) {
+        socket.join(`merchant:${merchant_id}`);
+      }
+    });
+  });
+
+  // Make DB pool and io accessible on every request
   app.locals.pool = pool;
+  app.locals.io = io;
 
   const port = process.env.PORT || 4000;
 
@@ -60,8 +81,11 @@ export async function createApp({ redisClient }) {
   );
 
   app.use(express.json({ limit: "1mb" }));
-  app.use(morgan("dev"));
-  
+  // Structured JSON logging via pino-http (replaces morgan)
+  app.use(httpLogger);
+  // Expose the root logger on app.locals so routes can use req.log or app.locals.logger
+  app.locals.logger = logger;
+
 
   // Health check
   app.get("/health", async (req, res) => {
@@ -125,5 +149,5 @@ export async function createApp({ redisClient }) {
     });
   });
 
-  return app;
+  return { app, io };
 }
